@@ -1,5 +1,6 @@
 const Nimiq = require('ozone-core');
 const mysql = require('mysql2/promise');
+const Queue = require('bull');
 
 const Helper = require('./Helper.js');
 
@@ -33,6 +34,16 @@ class PoolPayout extends Nimiq.Observable {
     }
 
     async start() {
+        this.queue = new Queue('payout', {
+          redis: {
+            port: process.env.REDIS_PORT || 6379,
+            host: process.env.REDIS_HOST || 'localhost',
+            prefix: process.env.REDIS_PREFIX || 'ozone-mining-pool-payout'
+          }
+        })
+
+        this.queue.on('error', (err) => Nimiq.Log.e(PoolPayout, err))
+
         this.connectionPool = await mysql.createPool({
             host: this._mySqlHost,
             user: 'root',
@@ -89,16 +100,10 @@ class PoolPayout extends Nimiq.Observable {
      * @private
      */
     async _payout(recipientId, recipientAddress, amount, deductFees) {
-        const fee = 138 * this._config.networkFee; // FIXME: Use from transaction
-        const txAmount = Math.floor(deductFees ? amount - fee : amount);
-        if (txAmount > 0) {
-            Nimiq.Log.i(PoolPayout, `PAYING ${Nimiq.Policy.satoshisToCoins(txAmount)} NIM to ${recipientAddress.toUserFriendlyAddress()}`);
-            const tx = this.wallet.createTransaction(recipientAddress, txAmount, fee, this.consensus.blockchain.height);
-            await this._storePayout(recipientId, amount, Date.now(), tx.hash());
-            await this.consensus.mempool.pushTransaction(tx);
-
-            // TODO remove payouts that are never mined into a block
-        }
+        Nimiq.Log.i(PoolPayout, `PAYING ${Nimiq.Policy.satoshisToCoins(amount)} NIM to ${recipientAddress.toUserFriendlyAddress()}`);
+        await this._storePayout(recipientId, amount, Date.now(), null);
+        await this.queue.add({recipientAddress: recipientAddress.toUserFriendlyAddress(), amount: amount})
+        // TODO remove payouts that are never mined into a block
     }
 
     /**
@@ -208,7 +213,7 @@ class PoolPayout extends Nimiq.Observable {
      */
     async _storePayout(userId, amount, datetime, transactionHash) {
         const query = 'INSERT INTO payout (user, amount, datetime, transaction) VALUES (?, ?, ?, ?)';
-        const queryArgs = [userId, amount, datetime, transactionHash.serialize()];
+        const queryArgs = [userId, amount, datetime, transactionHash && transactionHash.serialize() || null];
         await this.connectionPool.execute(query, queryArgs);
     }
 

@@ -161,7 +161,7 @@ class PoolServer extends Nimiq.Observable {
     _onConnection(ws, req) {
         try {
             const netAddress = Nimiq.NetAddress.fromIP(
-              this.config.trustProxy ?
+              this.config.trustProxy && req.headers['x-forwarded-for'] ?
                 req.headers['x-forwarded-for'].split(/\s*,\s*/)[0]
                 : req.connection.remoteAddress
             );

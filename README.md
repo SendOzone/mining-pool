@@ -1,3 +1,9 @@
+```
+REDIS_PORT
+REDIS_HOST
+REDIS_PREFIX
+```
+
 # Nimiq Mining-Pool Server
 This mining pool server combines resources of multiple clients mining on the Nimiq blockchain.
 Clients are independent network nodes and generate or validate blocks themselves to support decentralization.
