@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "homepage": "https://nimiq.com/",
   "description": "",
+  "scripts": {
+    "start": "node index.js"
+  },
   "private": true,
   "author": {
     "name": "The Nimiq Core Development Team",
@@ -23,13 +26,13 @@
     "jasmine": "^3.1.0"
   },
   "dependencies": {
-    "@nimiq/core": "^1.1.0",
     "btoa": "^1.2.1",
     "jasmine-spec-reporter": "^4.2.1",
     "json5": "^1.0.1",
     "lodash.merge": "^4.6.1",
     "minimist": "^1.2.0",
     "mysql2": "^1.5.3",
+    "ozone-core": "^1.1.2",
     "uws": "^9.147.0"
   }
 }

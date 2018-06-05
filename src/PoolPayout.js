@@ -1,4 +1,4 @@
-const Nimiq = require('@nimiq/core');
+const Nimiq = require('ozone-core');
 const mysql = require('mysql2/promise');
 
 const Helper = require('./Helper.js');
@@ -35,7 +35,7 @@ class PoolPayout extends Nimiq.Observable {
     async start() {
         this.connectionPool = await mysql.createPool({
             host: this._mySqlHost,
-            user: 'pool_payout',
+            user: 'root',
             password: this._mySqlPsw,
             database: 'pool'
         });
@@ -185,7 +185,7 @@ class PoolPayout extends Nimiq.Observable {
             const hashBuf = new Nimiq.SerialBuffer(Uint8Array.from(row.hash));
             const hash = Nimiq.Hash.unserialize(hashBuf);
             const block = await this.consensus.blockchain.getBlock(hash, false, true);
-            if (!block.minerAddr.equals(this.wallet.address)) {
+            if (!block.minerAddr.equals(Nimiq.Address.fromString(this._config.address))) {
                 Nimiq.Log.e(PoolPayout, `Wrong miner address in block ${block.hash()}`);
                 return false;
             }

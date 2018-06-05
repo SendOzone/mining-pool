@@ -1,4 +1,4 @@
-const Nimiq = require('@nimiq/core');
+const Nimiq = require('ozone-core');
 const argv = require('minimist')(process.argv.slice(2));
 const config = require('./src/Config.js')(argv.config);
 

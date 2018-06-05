@@ -2,7 +2,7 @@ const fs = require('fs');
 const JSON5 = require('json5');
 const merge = require('lodash.merge');
 
-const Log = require('@nimiq/core').Log;
+const Log = require('ozone-core').Log;
 const TAG = 'Config';
 
 /**
@@ -61,7 +61,8 @@ const DEFAULT_CONFIG = /** @type {Config} */ {
         desiredSps: 0.2, // desired shares per second
         connectionTimeout: 60 * 1000 * 10, // 10 minutes
         pplnsShares: 1000,
-        allowedErrors: 3
+        allowedErrors: 3,
+        trustProxy: false
     },
     poolServer: {
         enabled: false,
@@ -124,7 +125,8 @@ const CONFIG_TYPES = {
             desiredSps: 'number',
             connectionTimeout: 'number',
             pplnsShares: 'number',
-            allowedErrors: 'number'
+            allowedErrors: 'number',
+            trustProxy: 'boolean'
         }
     },
     poolServer: {

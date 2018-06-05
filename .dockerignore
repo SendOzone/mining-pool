@@ -1,0 +1,10 @@
+./.git
+./node_modules
+./test
+./npm-debug.log
+./coverage
+./dev-full-consensus
+./test-full-consensus
+./local-full-consensus
+./peer-key
+./wallet

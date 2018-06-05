@@ -1,4 +1,4 @@
-const Nimiq = require('@nimiq/core');
+const Nimiq = require('ozone-core');
 const mysql = require('mysql2/promise');
 
 const Helper = require('./Helper.js');
@@ -35,7 +35,7 @@ class PoolService extends Nimiq.Observable {
     async start() {
         this.connectionPool = await mysql.createPool({
             host: this._mySqlHost,
-            user: 'pool_service',
+            user: 'root',
             password: this._mySqlPsw,
             database: 'pool'
         });

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const mysql = require('mysql2/promise');
 
-const Nimiq = require('@nimiq/core');
+const Nimiq = require('ozone-core');
 
 const PoolAgent = require('../src/PoolAgent.js');
 const PoolServer = require('../src/PoolServer.js');

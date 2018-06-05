@@ -1,9 +1,6 @@
-CREATE DATABASE pool;
+SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 
-CREATE USER 'pool_payout'@'localhost';
-CREATE USER 'pool_service'@'localhost';
-CREATE USER 'pool_server'@'localhost';
-CREATE USER 'pool_info'@'localhost';
+CREATE DATABASE pool;
 
 CREATE TABLE pool.user (
   id           INTEGER     PRIMARY KEY NOT NULL AUTO_INCREMENT,
@@ -54,31 +51,3 @@ CREATE TABLE pool.payout_request (
   id           INTEGER    PRIMARY KEY NOT NULL AUTO_INCREMENT,
   user         INTEGER    NOT NULL UNIQUE REFERENCES pool.user(id)
 );
-
-GRANT SELECT,INSERT ON pool.user TO 'pool_server'@'localhost';
-GRANT SELECT ON pool.user TO 'pool_service'@'localhost';
-GRANT SELECT ON pool.user TO 'pool_payout'@'localhost';
-GRANT SELECT ON pool.user TO 'pool_info'@'localhost';
-
-GRANT SELECT,INSERT ON pool.block TO 'pool_server'@'localhost';
-GRANT SELECT,INSERT,UPDATE ON pool.block TO 'pool_service'@'localhost';
-GRANT SELECT ON pool.block TO 'pool_payout'@'localhost';
-GRANT SELECT ON pool.block TO 'pool_info'@'localhost';
-
-GRANT SELECT,INSERT ON pool.share TO 'pool_server'@'localhost';
-GRANT SELECT ON pool.share TO 'pool_service'@'localhost';
-GRANT SELECT ON pool.share TO 'pool_info'@'localhost';
-
-GRANT SELECT ON pool.payin TO 'pool_server'@'localhost';
-GRANT SELECT,INSERT,DELETE ON pool.payin TO 'pool_service'@'localhost';
-GRANT SELECT ON pool.payin TO 'pool_payout'@'localhost';
-GRANT SELECT ON pool.payin TO 'pool_info'@'localhost';
-
-GRANT SELECT ON pool.payout TO 'pool_server'@'localhost';
-GRANT SELECT,INSERT ON pool.payout TO 'pool_service'@'localhost';
-GRANT SELECT,INSERT ON pool.payout TO 'pool_payout'@'localhost';
-GRANT SELECT ON pool.payout TO 'pool_info'@'localhost';
-
-GRANT SELECT,INSERT,DELETE ON pool.payout_request TO 'pool_server'@'localhost';
-GRANT SELECT,DELETE ON pool.payout_request TO 'pool_payout'@'localhost';
-GRANT SELECT ON pool.payout_request TO 'pool_info'@'localhost';

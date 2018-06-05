@@ -1,4 +1,4 @@
-const Nimiq = require('@nimiq/core');
+const Nimiq = require('ozone-core');
 
 class PoolAgent extends Nimiq.Observable {
     constructor(pool, ws, netAddress) {

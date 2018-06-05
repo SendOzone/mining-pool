@@ -1,5 +1,6 @@
-const Nimiq = require('@nimiq/core');
+const Nimiq = require('ozone-core');
 const https = require('https');
+const http = require('http');
 const WebSocket = require('uws');
 const mysql = require('mysql2/promise');
 const fs = require('fs');
@@ -91,9 +92,30 @@ class PoolServer extends Nimiq.Observable {
         this._currentLightHead = this.consensus.blockchain.head.toLight();
         await this._updateTransactions();
 
+        const setupConnection = await mysql.createConnection({
+            host: this._mySqlHost,
+            user: 'root',
+            password: this._mySqlPsw,
+            multipleStatements: true
+        });
+
+        const hasDatabase = (await setupConnection.query(`
+          SELECT SCHEMA_NAME
+          FROM INFORMATION_SCHEMA.SCHEMATA
+          WHERE SCHEMA_NAME = 'pool'
+        `))[0].length > 0
+
+        if (!hasDatabase) {
+          await setupConnection.query(
+            fs.readFileSync(__dirname + '/../sql/create.sql', 'utf8')
+          )
+        }
+
+        setupConnection.end()
+
         this.connectionPool = await mysql.createPool({
             host: this._mySqlHost,
-            user: 'pool_server',
+            user: 'root',
             password: this._mySqlPsw,
             database: 'pool'
         });
@@ -105,20 +127,24 @@ class PoolServer extends Nimiq.Observable {
     }
 
     static createServer(port, sslKeyPath, sslCertPath) {
-        const sslOptions = {
-            key: fs.readFileSync(sslKeyPath),
-            cert: fs.readFileSync(sslCertPath)
-        };
-        const httpsServer = https.createServer(sslOptions, (req, res) => {
+        const handler = (req, res) => {
             res.writeHead(200);
             res.end('Nimiq Pool Server\n');
-        }).listen(port);
+        }
+
+        const server = process.env.LOCAL === '1' ?
+          http.createServer({}, handler) : https.createServer({
+              key: fs.readFileSync(sslKeyPath),
+              cert: fs.readFileSync(sslCertPath)
+          }, handler)
 
         // We have to access socket.remoteAddress here because otherwise req.connection.remoteAddress won't be set in the WebSocket's 'connection' event (yay)
-        httpsServer.on('secureConnection', socket => socket.remoteAddress);
+        // https://github.com/nodejs/node-v0.x-archive/issues/4341#issuecomment-10924294
+        server.on('secureConnection', socket => socket.remoteAddress);
+        server.on('connection', socket => socket.remoteAddress)
 
         Nimiq.Log.i(PoolServer, "Started server on port " + port);
-        return new WebSocket.Server({server: httpsServer});
+        return new WebSocket.Server({server: server.listen(port)});
     }
 
     stop() {
@@ -134,7 +160,11 @@ class PoolServer extends Nimiq.Observable {
      */
     _onConnection(ws, req) {
         try {
-            const netAddress = Nimiq.NetAddress.fromIP(req.connection.remoteAddress);
+            const netAddress = Nimiq.NetAddress.fromIP(
+              this.config.trustProxy ?
+                req.headers['x-forwarded-for'].split(/\s*,\s*/)[0]
+                : req.connection.remoteAddress
+            );
             if (this._isIpBanned(netAddress)) {
                 Nimiq.Log.i(PoolServer, `Banned IP tried to connect ${netAddress}`);
                 ws.close();
