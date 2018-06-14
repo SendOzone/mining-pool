@@ -99,6 +99,10 @@ class PoolServer extends Nimiq.Observable {
             multipleStatements: true
         });
 
+        await setupConnection.query(`
+          SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
+        `)
+
         const hasDatabase = (await setupConnection.query(`
           SELECT SCHEMA_NAME
           FROM INFORMATION_SCHEMA.SCHEMATA
